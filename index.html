@@ -27,6 +27,7 @@ textarea{min-height:150px;resize:vertical}
 small{color:var(--mu);display:block;margin-top:6px}
 button,.b{font:inherit;font-weight:600;border:0;border-radius:8px;padding:12px 16px;min-height:44px;background:var(--ac);color:var(--on);cursor:pointer;text-align:center;text-decoration:none;display:block}
 button.g{background:transparent;color:var(--ac);border:1px solid var(--ac)}
+button[disabled]{opacity:.45;cursor:default}
 #st{min-height:22px;margin:0;color:var(--mu)}
 #res,#sel{max-width:100%;height:auto;display:block;margin:8px 0;border-radius:6px}
 #res{cursor:pointer}#sel{touch-action:none;cursor:crosshair}
@@ -42,7 +43,7 @@ ol{margin:6px 0 0;padding-left:22px;color:var(--mu);font-size:13px}
 </head>
 <body>
 <main>
-<p class="intro">Tải trang truyện lên, dán lời thoại tiếng Việt — công cụ tự tìm bóng thoại (kể cả bóng màu) rồi cho bạn duyệt lại từng vùng nhận diện trên ảnh: vùng nào không phải bóng thoại thì chạm để tắt, chỉ vùng đang bật mới bị xoá chữ Nhật và chèn chữ Việt, nên trang nào cũng kiểm soát được. Vùng SFX chỉ được nhận diện và để nguyên tiếng Nhật; chạm vào một vùng SFX trên ảnh kết quả thì vùng đó mới được dịch. Chỗ nào máy bỏ sót không nhận diện được, sau khi áp dụng hãy bấm nút "+ Chạm để thêm chữ" rồi chạm thẳng vào vùng chữ đó: công cụ tự khoanh vùng chữ quanh chỗ chạm, bạn gõ chữ Việt của mình vào là chữ được thay vào đúng chỗ đó. Nếu dán kèm câu Nhật gốc, công cụ sẽ đọc chữ Nhật trong từng bóng thoại rồi ghép đúng câu Việt tương ứng; chỉ ảnh cắt quanh từng bóng được gửi đi để đọc chữ.</p>
+<p class="intro">Tải trang truyện lên, dán lời thoại tiếng Việt — công cụ tự tìm bóng thoại (kể cả bóng màu) rồi cho bạn duyệt lại từng vùng nhận diện trên ảnh: vùng nào không phải bóng thoại thì chạm để tắt, chỉ vùng đang bật mới bị xoá chữ Nhật và chèn chữ Việt, nên trang nào cũng kiểm soát được. Vùng SFX chỉ được nhận diện và để nguyên tiếng Nhật; chạm vào một vùng SFX trên ảnh kết quả thì vùng đó mới được dịch. Chỗ nào máy bỏ sót không nhận diện được, sau khi áp dụng hãy bấm nút "+ Chạm để thêm chữ" rồi chạm thẳng vào vùng chữ đó: công cụ tự khoanh vùng chữ quanh chỗ chạm, bạn gõ chữ Việt của mình vào là chữ được thay vào đúng chỗ đó. Nếu dán kèm câu Nhật gốc, công cụ sẽ đọc chữ Nhật trong từng bóng thoại rồi ghép đúng câu Việt tương ứng; chỉ ảnh cắt quanh từng bóng được gửi đi để đọc chữ. Thao tác sai thì bấm nút "↶ Quay lại" phía trên ảnh kết quả để hoàn tác từng bước. Bạn cũng tự kéo được một ô xoá bốn cạnh để xoá bất kỳ chỗ nào mình muốn, và thêm khung văn bản tự do: gõ chữ rồi kéo khung đến đúng vị trí, kéo các cạnh để đổi kích thước.</p>
 <div class="col">
  <div class="c"><h2>1. Ảnh trang truyện</h2><input type="file" id="fi" accept="image/*"></div>
  <div class="c"><h2>2. Lời thoại tiếng Việt</h2><textarea id="tx" placeholder="Mỗi dòng là lời thoại của một bóng thoại. Có thể gõ chỉ tiếng Việt (ghép theo thứ tự đọc), hoặc kèm cả câu Nhật gốc để công cụ nhận đúng ô: một cặp trên một dòng (câu Nhật - câu Việt), hoặc câu Nhật một dòng rồi câu Việt dòng ngay sau. Nếu trang có hàng tiêu đề trên cùng, dòng đầu sẽ vào tiêu đề. Dòng SFX, dòng có nhãn tiêu đề/bảng/biển, dòng kết thúc bằng dấu hai chấm sẽ tự bị bỏ qua. Dùng dấu | để ngắt dòng trong một bóng thoại."></textarea><small id="pn"></small><ol id="pl"></ol></div>
@@ -80,11 +81,21 @@ ol{margin:6px 0 0;padding-left:22px;color:var(--mu);font-size:13px}
     <button class="g" id="tg" style="margin-top:8px;width:100%"></button>
     <div class="r"><label for="ec">Màu chữ SFX (tự lấy từ màu gốc)</label><input type="color" id="ec" value="#000000"></div>
    </div>
+   <div id="fx" hidden>
+    <div class="r"><label for="ftx">Văn bản tự do đang chọn</label><input type="text" id="ftx" placeholder="Gõ chữ muốn đặt lên ảnh (dùng | để ngắt dòng)"></div>
+    <div class="r"><label for="ftc">Màu chữ văn bản</label><input type="color" id="ftc" value="#000000"></div>
+    <button class="g" id="fdel" style="margin-top:8px;width:100%">Xoá văn bản này</button>
+   </div>
   </div>
   <button class="g" id="sx" style="margin-top:8px;width:100%">+ Thêm vùng SFX (kéo chọn trên ảnh)</button>
   <button class="g" id="bx" style="margin-top:8px;width:100%">+ Thêm bóng thoại (kéo chọn trên ảnh)</button>
   <button class="g" id="ta" style="margin-top:8px;width:100%">+ Chạm để thêm chữ (vùng máy bỏ sót)</button>
   <button class="g" id="db" hidden style="margin-top:8px;width:100%">Bỏ vùng chữ vừa thêm (không thay vùng này)</button>
+ <button id="ud" disabled style="margin-top:8px;width:100%">↶ Quay lại bước trước</button>
+ <button class="g" id="zb" style="margin-top:8px;width:100%">Ô xoá thủ công (kéo khung, chỉnh 4 cạnh)</button>
+ <button class="g" id="zbd" hidden style="margin-top:8px;width:100%">Xoá ô xoá đang chọn</button>
+ <button class="g" id="tf" style="margin-top:8px;width:100%">+ Thêm văn bản (gõ chữ, kéo đến chỗ cần đặt)</button>
+ <button class="g" id="tm" style="margin-top:8px;width:100%">Di chuyển / chỉnh khung văn bản</button>
  </div>
  <div class="tb" id="rv" hidden>
   <p class="s" id="rvt"></p>
@@ -101,7 +112,8 @@ ol{margin:6px 0 0;padding-left:22px;color:var(--mu);font-size:13px}
 </main>
 <script>
 const $=id=>document.getElementById(id);
-let src=null,fontName='VNFComic',nf=0,S=null,url=null,tm=0,pick=false,dr=null,RV=null,tapAdd=false;
+let src=null,fontName='VNFComic',nf=0,S=null,url=null,tm=0,pick=false,dr=null,RV=null,tapAdd=false,HIST=[],baseVer=0,BX=null;
+const baseCache=new Map(),gest=new Set();
 const log=t=>$('st').textContent=t,tick=()=>new Promise(r=>setTimeout(r,30)),lazy=()=>{clearTimeout(tm);tm=setTimeout(render,50)},short=t=>t.length>40?t.slice(0,40)+'…':t;
 
 // 5 font đóng gói sẵn do người dùng gửi (đã thay toàn bộ danh sách font cũ);
@@ -132,17 +144,17 @@ $('fi').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
   const im=new Image();im.src=URL.createObjectURL(f);
   try{await im.decode()}catch(_){return log('Không đọc được ảnh này.')}
-  src=im;S=null;RV=null;$('rv').hidden=true;pick=false;sync();$('res').src=im.src;$('res').hidden=false;$('sel').hidden=true;$('em').hidden=true;$('dl').hidden=true;
+  src=im;S=null;RV=null;HIST=[];baseCache.clear();baseVer=0;$('rv').hidden=true;pick=false;sync();$('res').src=im.src;$('res').hidden=false;$('sel').hidden=true;$('em').hidden=true;$('dl').hidden=true;
   log('Đã nhận ảnh '+im.naturalWidth+'×'+im.naturalHeight+'.');
 };
 $('ff').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
-  try{const n='UF'+(++nf),ff=new FontFace(n,await f.arrayBuffer());await ff.load();document.fonts.add(ff);UF.push({id:n,name:f.name});fontName=n;fillShared();if(S){S.font=n;refitDefault();render()}$('fs').textContent='Đã nạp font: '+f.name+' (đã đặt làm font chung và thêm vào danh sách font riêng từng lời thoại)'}
+  try{const n='UF'+(++nf),ff=new FontFace(n,await f.arrayBuffer());await ff.load();document.fonts.add(ff);UF.push({id:n,name:f.name});fontName=n;fillShared();if(S){pushHist();S.font=n;refitDefault();render()}$('fs').textContent='Đã nạp font: '+f.name+' (đã đặt làm font chung và thêm vào danh sách font riêng từng lời thoại)'}
   catch(_){$('fs').textContent='Không đọc được font này, hãy thử file khác.'}
 };
 
 fillShared();
-$('gf').onchange=()=>{fontName=$('gf').value;if(S){S.font=fontName;refitDefault();render()}log('Đã đổi font chung. Các bóng thoại đang để "Font chung" sẽ dùng font này; bóng nào đã chọn font riêng thì giữ nguyên font riêng.')};
+$('gf').onchange=()=>{fontName=$('gf').value;if(S){pushHist();S.font=fontName;refitDefault();render()}log('Đã đổi font chung. Các bóng thoại đang để "Font chung" sẽ dùng font này; bóng nào đã chọn font riêng thì giữ nguyên font riêng.')};
 
 // đọc văn bản dán vào: nhận nhiều kiểu (có nhãn "Dịch tiếng Việt:", dòng lẫn chữ Nhật và tiếng Việt, hoặc mỗi dòng một câu)
 const JP=/[\u3000-\u30ff\u3400-\u9fff\uff01-\uff9f]/,JPG=new RegExp(JP.source,'g');
@@ -842,22 +854,191 @@ function putSfx(x,f,q,o){
   x.restore();
 }
 
+// ===== Hoàn tác (quay lại khi thao tác sai) =====
+// Trước mỗi thao tác sửa ảnh, chụp lại toàn bộ trạng thái; nút Quay lại khôi phục
+// lần lượt từng bước. Ảnh nền chỉ đổi ở vài chỗ nên được lưu theo phiên bản để
+// không tốn bộ nhớ điện thoại: mỗi phiên bản nền chỉ giữ một bản sao dùng chung.
+function touchBase(){baseVer++}
+function snapState(){
+  if(!S)return{none:1};
+  if(!baseCache.has(baseVer)){
+    const c=document.createElement('canvas');c.width=S.base.width;c.height=S.base.height;c.getContext('2d').drawImage(S.base,0,0);
+    baseCache.set(baseVer,c);
+    if(baseCache.size>5)for(const k of baseCache.keys()){if(k!==baseVer){baseCache.delete(k);break}}
+  }
+  const cp=o=>Object.assign({},o);
+  return{v:baseVer,bs:S.bs.map(cp),L:S.L.slice(),auto:S.auto.slice(),k:S.k.slice(),lh:S.lh?S.lh.slice():null,f:S.f?S.f.slice():null,X:S.X.slice(),sfx:S.sfx.map(cp),ti:S.ti?cp(S.ti):null,font:S.font,sel:S.sel?cp(S.sel):null,eb:(S.eb||[]).map(cp),ft:(S.ft||[]).map(cp),ui:{gs:$('gs').value,gl:$('gl').value,hw:$('hw').value,cl:$('cl').value}};
+}
+function pushHist(force){
+  if(!S&&!force)return;
+  HIST.push(snapState());if(HIST.length>25)HIST.shift();syncUndo();
+}
+// các thanh trượt/ô gõ phát nhiều sự kiện liên tiếp trong một lần thao tác:
+// chỉ chụp một lần cho cả cử chỉ, tới khi sự kiện change (thả tay/rời ô) mới chụp tiếp
+function ghist(k){if(gest.has(k))return;gest.add(k);pushHist()}
+document.addEventListener('change',e=>{if(e.target&&e.target.id)gest.delete(e.target.id)});
+function syncUndo(){const u=$('ud');if(!u)return;u.disabled=!HIST.length;u.textContent=HIST.length?('↶ Quay lại bước trước (còn '+HIST.length+' bước)'):'↶ Quay lại bước trước'}
+function undoLast(){
+  if(RV)return log('Đang ở bước duyệt: hãy Áp dụng hoặc Huỷ bước duyệt rồi mới quay lại.');
+  if(!HIST.length)return log('Chưa có thao tác nào để quay lại.');
+  const sn=HIST.pop();syncUndo();
+  endPick();
+  if(tapAdd){tapAdd=false;$('ta').textContent='+ Chạm để thêm chữ (vùng máy bỏ sót)';$('ta').style.background='';$('ta').style.color=''}
+  if(sn.none){S=null;$('res').src=src.src;$('res').hidden=false;$('sel').hidden=true;$('em').hidden=true;$('dl').hidden=true;sync();log('Đã quay lại trạng thái trước khi áp dụng thay chữ.');return}
+  const bc=baseCache.get(sn.v),base=document.createElement('canvas');base.width=bc.width;base.height=bc.height;base.getContext('2d').drawImage(bc,0,0);
+  S={base,bs:sn.bs,L:sn.L,auto:sn.auto,k:sn.k,lh:sn.lh,f:sn.f,X:sn.X,sfx:sn.sfx,ti:sn.ti,font:sn.font,sel:sn.sel,eb:sn.eb,ft:sn.ft,cur:null};
+  baseVer=sn.v;
+  if(sn.ui){$('gs').value=sn.ui.gs;$('gv').textContent=sn.ui.gs+'%';$('gl').value=sn.ui.gl;$('glv').textContent=sn.ui.gl+'%';$('hw').value=sn.ui.hw;$('cl').value=sn.ui.cl}
+  sync();render();log('Đã quay lại một bước. Nếu vẫn chưa đúng, bấm Quay lại lần nữa.');
+}
+$('ud').onclick=undoLast;
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&(e.key==='z'||e.key==='Z')){
+    const t=e.target;if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'))return;
+    e.preventDefault();undoLast();
+  }
+});
+
+// ===== Văn bản tự do: gõ chữ, tự căn vừa khung, kéo khung đi khắp trang =====
+function putFree(x,f,o){
+  if(!f.t||!f.t.trim())return;
+  const ps=f.t.split('|'),lf=(f.lh||100)/100;
+  let s=Math.max(8,Math.floor(f.h)),ls=[],lh=0;
+  for(;s>=6;s--){x.font=s+'px '+o.font+',VNFComic';lh=s*1.15*lf;ls=ps.flatMap(p=>wrap(x,p.trim(),f.w));if(ls.length*lh<=f.h&&ls.every(l=>x.measureText(l).width<=f.w))break}
+  s=Math.max(5,s*(f.k||100)/100);x.font=s+'px '+o.font+',VNFComic';lh=s*1.15*lf;
+  ls=ps.flatMap(p=>wrap(x,p.trim(),f.w));
+  x.textAlign='center';x.textBaseline='middle';x.lineJoin='round';
+  ls.forEach((l,j)=>{
+    const y=f.y+f.h/2-ls.length*lh/2+j*lh+lh/2;
+    if(o.hw>0){x.lineWidth=o.hw*2;x.strokeStyle='#fff';x.strokeText(l,f.x+f.w/2,y)}
+    x.fillStyle=f.c||o.col;x.fillText(l,f.x+f.w/2,y);
+  });
+}
+$('tf').onclick=()=>{
+  if(!S)return log('Hãy áp dụng các vùng đã duyệt trước, rồi mới thêm văn bản.');
+  if(pick)endPick();
+  pushHist();
+  const W=S.base.width,H=S.base.height,w=Math.round(W*.55),h=Math.round(H*.1);
+  S.ft.push({x:Math.round((W-w)/2),y:Math.round(H*.35),w,h,t:'',k:100,lh:100,f:'',c:$('cl').value});
+  S.sel={t:'f',i:S.ft.length-1};sync();render();
+  log('Đã thêm một khung văn bản ở giữa ảnh. Gõ chữ vào ô "Văn bản tự do đang chọn" phía trên ảnh, chỉnh cỡ chữ bằng thanh "Cỡ chữ mục đang chọn", rồi bấm "Di chuyển / chỉnh khung văn bản" để kéo khung tới đúng vị trí và kéo các cạnh/góc để đổi kích thước khung.');
+  $('ftx').focus();
+};
+$('ftx').oninput=()=>{const s=S&&S.sel;if(!s||s.t!=='f')return;ghist('ftx');S.ft[s.i].t=$('ftx').value;lazy()};
+$('ftc').oninput=()=>{const s=S&&S.sel;if(!s||s.t!=='f')return;ghist('ftc');S.ft[s.i].c=$('ftc').value;lazy()};
+$('fdel').onclick=()=>{const s=S&&S.sel;if(!s||s.t!=='f')return;pushHist();S.ft.splice(s.i,1);S.sel=null;sync();render();log('Đã xoá văn bản tự do đó.')};
+
+// ===== Chỉnh khung bằng ngón tay: dùng chung cho ô xoá thủ công và khung văn bản =====
+// Kéo giữa khung để di chuyển; kéo các ô vuông ở 4 góc và giữa 4 cạnh để chỉnh
+// từng cạnh. Tay nắm được tính theo cỡ hiển thị trên màn hình (~30px) nên dễ
+// chạm trúng trên iPhone dù ảnh gốc to.
+function normBox(q,c){const x=Math.max(0,Math.round(q.x)),y=Math.max(0,Math.round(q.y));return{x,y,w:Math.max(4,Math.min(c.width-x,Math.round(q.w))),h:Math.max(4,Math.min(c.height-y,Math.round(q.h)))}}
+function boxList(){return pick==='e'?S.eb:S.ft}
+function handleList(b){const cx=b.x+b.w/2,cy=b.y+b.h/2;return[{p:[b.x,b.y],e:{l:1,t:1}},{p:[cx,b.y],e:{t:1}},{p:[b.x+b.w,b.y],e:{r:1,t:1}},{p:[b.x,cy],e:{l:1}},{p:[b.x+b.w,cy],e:{r:1}},{p:[b.x,b.y+b.h],e:{l:1,b:1}},{p:[cx,b.y+b.h],e:{b:1}},{p:[b.x+b.w,b.y+b.h],e:{r:1,b:1}}]}
+function clampBox(b){const W=S.base.width,H=S.base.height;b.w=Math.max(12,Math.min(b.w,W));b.h=Math.max(12,Math.min(b.h,H));b.x=Math.round(Math.max(0,Math.min(b.x,W-b.w)));b.y=Math.round(Math.max(0,Math.min(b.y,H-b.h)));b.w=Math.round(b.w);b.h=Math.round(b.h)}
+function syncBoxBtns(){$('zbd').hidden=!(pick==='e'&&BX&&BX.sel>=0&&S&&S.eb[BX.sel])}
+function drawBoxOverlay(){
+  if(!BX||!S)return;
+  const v=$('sel'),x=v.getContext('2d');x.drawImage(S.cur,0,0);
+  const list=boxList(),sz=Math.max(16,v.width/36);
+  list.forEach((b,i)=>{
+    const on=i===BX.sel;
+    x.lineWidth=Math.max(2,v.width/200);x.strokeStyle=on?'#e0e':'rgba(224,0,224,.45)';x.strokeRect(b.x,b.y,b.w,b.h);
+    if(on){x.fillStyle='#e0e';handleList(b).forEach(hd=>x.fillRect(hd.p[0]-sz/2,hd.p[1]-sz/2,sz,sz))}
+    if(pick==='t'){x.font='bold '+Math.max(16,v.width/30)+'px VNFComic';x.textAlign='left';x.textBaseline='bottom';x.fillStyle='#e0e';x.fillText('Chữ '+(i+1),b.x+2,Math.max(14,b.y-4))}
+  });
+  if(BX.drag&&BX.drag.tmp){const b=BX.drag.tmp;x.save();x.setLineDash([10,6]);x.lineWidth=Math.max(2,v.width/200);x.strokeStyle='#e0e';x.strokeRect(b.x,b.y,b.w,b.h);x.restore()}
+  syncBoxBtns();
+}
+function startBoxEdit(mode){
+  if(!S)return log('Hãy áp dụng các vùng đã duyệt trước.');
+  if(pick===mode){endPick();return}
+  if(pick)endPick();
+  if(mode==='t'&&!S.ft.length)return log('Chưa có văn bản tự do nào. Bấm "+ Thêm văn bản" để tạo một khung chữ trước.');
+  const v=$('sel');pick=mode;
+  BX={sel:mode==='t'?(S.sel&&S.sel.t==='f'?S.sel.i:S.ft.length-1):S.eb.length-1,drag:null};
+  v.width=S.cur.width;v.height=S.cur.height;v.hidden=false;$('res').hidden=true;
+  $(mode==='e'?'zb':'tm').textContent='Xong (thoát chế độ chỉnh khung)';
+  drawBoxOverlay();
+  log(mode==='e'?'Chế độ ô xoá đang bật: kéo trên vùng trống để tạo ô xoá mới; kéo giữa một ô để di chuyển; kéo các ô vuông ở góc và giữa cạnh để chỉnh kích thước từng cạnh. Thoát chế độ này là vùng trong các ô sẽ bị xoá (lấp theo nền xung quanh). Xoá nhầm thì bấm Quay lại.':'Chế độ chỉnh khung văn bản đang bật: kéo giữa khung để di chuyển khung tới chỗ cần đặt chữ; kéo các ô vuông ở góc và giữa cạnh để đổi kích thước khung, chữ tự căn lại theo khung.');
+}
+function boxDown(e){
+  const v=$('sel'),p=pt(e),list=boxList(),tol=30*v.width/Math.max(1,v.getBoundingClientRect().width),sb=BX.sel>=0?list[BX.sel]:null;
+  if(sb)for(const hd of handleList(sb)){
+    if(Math.abs(p[0]-hd.p[0])<=tol&&Math.abs(p[1]-hd.p[1])<=tol){pushHist();BX.drag={ty:'rs',i:BX.sel,ed:hd.e,o:{x:sb.x,y:sb.y,w:sb.w,h:sb.h},a:p};drawBoxOverlay();return}
+  }
+  for(let i=list.length-1;i>=0;i--){
+    const b=list[i];
+    if(p[0]>=b.x-tol/3&&p[0]<=b.x+b.w+tol/3&&p[1]>=b.y-tol/3&&p[1]<=b.y+b.h+tol/3){
+      pushHist();BX.sel=i;BX.drag={ty:'mv',i,o:{x:b.x,y:b.y,w:b.w,h:b.h},a:p};
+      if(pick==='t'){S.sel={t:'f',i};sync()}
+      drawBoxOverlay();return;
+    }
+  }
+  BX.sel=-1;
+  if(pick==='e')BX.drag={ty:'nw',a:p,tmp:null};
+  drawBoxOverlay();
+}
+function boxMove(e){
+  if(!BX||!BX.drag)return;
+  const p=pt(e),d=BX.drag,dx=p[0]-d.a[0],dy=p[1]-d.a[1];
+  if(d.ty==='nw'){d.tmp={x:Math.min(d.a[0],p[0]),y:Math.min(d.a[1],p[1]),w:Math.abs(p[0]-d.a[0]),h:Math.abs(p[1]-d.a[1])}}
+  else{
+    const b=boxList()[d.i],o=d.o,W=S.base.width,H=S.base.height;
+    if(d.ty==='mv'){b.x=Math.max(0,Math.min(o.x+dx,W-o.w));b.y=Math.max(0,Math.min(o.y+dy,H-o.h))}
+    else{
+      let x0=o.x,y0=o.y,x1=o.x+o.w,y1=o.y+o.h;
+      if(d.ed.l)x0=Math.max(0,Math.min(o.x+dx,x1-12));
+      if(d.ed.r)x1=Math.min(W,Math.max(o.x+o.w+dx,x0+12));
+      if(d.ed.t)y0=Math.max(0,Math.min(o.y+dy,y1-12));
+      if(d.ed.b)y1=Math.min(H,Math.max(o.y+o.h+dy,y0+12));
+      b.x=x0;b.y=y0;b.w=x1-x0;b.h=y1-y0;
+    }
+  }
+  drawBoxOverlay();
+}
+function boxUp(){
+  if(!BX||!BX.drag)return;
+  const d=BX.drag;BX.drag=null;
+  if(d.ty==='nw'){
+    if(d.tmp&&d.tmp.w>=10&&d.tmp.h>=10){
+      pushHist();
+      const b={x:Math.round(d.tmp.x),y:Math.round(d.tmp.y),w:Math.round(d.tmp.w),h:Math.round(d.tmp.h)};
+      clampBox(b);S.eb.push(b);BX.sel=S.eb.length-1;
+      log('Đã thêm ô xoá '+S.eb.length+'. Kéo giữa ô để di chuyển, kéo các ô vuông ở góc/cạnh để chỉnh lại; bấm "Xong" để áp dụng xoá.');
+    }
+    drawBoxOverlay();return;
+  }
+  const b=boxList()[d.i];if(b)clampBox(b);
+  if(pick==='t')sync();
+  drawBoxOverlay();
+}
+function boxCancel(){
+  if(BX&&BX.drag&&BX.drag.o){const b=boxList()[BX.drag.i];if(b)Object.assign(b,BX.drag.o)}
+  if(BX){BX.drag=null;drawBoxOverlay()}
+}
+$('zb').onclick=()=>startBoxEdit('e');
+$('tm').onclick=()=>startBoxEdit('t');
+$('zbd').onclick=()=>{if(!S||!BX||pick!=='e'||BX.sel<0)return;pushHist();S.eb.splice(BX.sel,1);BX.sel=-1;drawBoxOverlay();log('Đã bỏ ô xoá đó, vùng trong ô sẽ không bị xoá nữa.')};
+
 // thanh chỉnh: hiện khi đã có kết quả, theo mục đang chọn
 function sync(){
-  $('tb').hidden=!S;
+  $('tb').hidden=!S;syncUndo();
   if(!S)return;
   const s=S.sel;
   $('ed').hidden=!s;
   $('db').hidden=!(s&&s.t==='b'&&S.bs[s.i]&&S.bs[s.i].pending);
-  if(!s){$('sl').textContent='Chạm vào tiêu đề hoặc bóng thoại để thay chữ và chỉnh riêng cỡ chữ, font và khoảng cách giữa các hàng cho từng lời thoại; chạm vào một vùng SFX để dịch vùng đó sang tiếng Việt. Chỗ nào máy bỏ sót chưa có bóng thoại, bấm "+ Chạm để thêm chữ (vùng máy bỏ sót)" rồi chạm thẳng vào vùng chữ đó trên ảnh.';return}
-  const f=s.t==='x'?S.sfx[s.i]:null;
+  if(!s){$('sl').textContent='Chạm vào tiêu đề hoặc bóng thoại để thay chữ và chỉnh riêng cỡ chữ, font và khoảng cách giữa các hàng cho từng lời thoại; chạm vào một vùng SFX để dịch vùng đó sang tiếng Việt. Chỗ nào máy bỏ sót chưa có bóng thoại, bấm "+ Chạm để thêm chữ (vùng máy bỏ sót)" rồi chạm thẳng vào vùng chữ đó trên ảnh. Sai thao tác thì bấm "↶ Quay lại" phía trên để hoàn tác; muốn tự xoá một chỗ bất kỳ thì dùng "Ô xoá thủ công", muốn đặt chữ ở vị trí bất kỳ thì dùng "+ Thêm văn bản".';return}
+  const f=s.t==='x'?S.sfx[s.i]:null,g2=s.t==='f'?S.ft[s.i]:null;
   $('ex').hidden=!f;
-  $('ebr').hidden=!!f; // SFX đã có ô chữ riêng (#et) trong khung SFX; bóng thoại/tiêu đề dùng ô chữ lời thoại
-  if(!f)$('eb').value=s.t==='t'?S.ti.t:S.L[s.i];
-  $('ek').value=f?f.k:(s.t==='t'?S.ti.k:S.k[s.i]);
-  $('elh').value=f?(f.lh||100):(s.t==='t'?(S.ti.lh||100):(S.lh?S.lh[s.i]:100));
-  fillFont($('ef'),f?(f.f||''):(s.t==='t'?(S.ti.f||''):(S.f?S.f[s.i]||'':'')));
-  $('sl').textContent=f?'Đang chọn vùng SFX '+(s.i+1)+(f.on?' (đang dịch sang tiếng Việt)':' (đang để nguyên tiếng Nhật)'):(s.t==='t'?'Đang chọn tiêu đề: '+short(S.ti.t):(S.bs[s.i].pending?'Đã khoanh vùng chữ bị bỏ sót (khung nét đứt màu tím) — gõ chữ Việt vào ô "Chữ lời thoại mục đang chọn" phía trên, chữ Nhật ở vùng này sẽ bị xoá và thay bằng chữ của bạn. Nếu khoanh nhầm chỗ, bấm nút "Bỏ vùng chữ vừa thêm" ở dưới.':'Đang chọn bóng thoại #'+(s.i+1)+': '+short(S.L[s.i])));
+  $('fx').hidden=!g2;
+  $('ebr').hidden=!!f||!!g2; // SFX và văn bản tự do có ô chữ riêng; bóng thoại/tiêu đề dùng ô chữ lời thoại
+  if(!f&&!g2)$('eb').value=s.t==='t'?S.ti.t:S.L[s.i];
+  if(g2){$('ftx').value=g2.t;$('ftc').value=g2.c||'#000000'}
+  $('ek').value=f?f.k:(g2?g2.k:(s.t==='t'?S.ti.k:S.k[s.i]));
+  $('elh').value=f?(f.lh||100):(g2?(g2.lh||100):(s.t==='t'?(S.ti.lh||100):(S.lh?S.lh[s.i]:100)));
+  fillFont($('ef'),f?(f.f||''):(g2?(g2.f||''):(s.t==='t'?(S.ti.f||''):(S.f?S.f[s.i]||'':''))));
+  $('sl').textContent=f?'Đang chọn vùng SFX '+(s.i+1)+(f.on?' (đang dịch sang tiếng Việt)':' (đang để nguyên tiếng Nhật)'):(g2?'Đang chọn văn bản tự do '+(s.i+1)+': gõ chữ ở ô "Văn bản tự do đang chọn", chỉnh cỡ chữ, giãn dòng và font ở các thanh phía trên, rồi bấm "Di chuyển / chỉnh khung văn bản" để kéo khung tới vị trí cần đặt và kéo các cạnh để đổi kích thước khung.':(s.t==='t'?'Đang chọn tiêu đề: '+short(S.ti.t):(S.bs[s.i].pending?'Đã khoanh vùng chữ bị bỏ sót (khung nét đứt màu tím) — gõ chữ Việt vào ô "Chữ lời thoại mục đang chọn" phía trên, chữ Nhật ở vùng này sẽ bị xoá và thay bằng chữ của bạn. Nếu khoanh nhầm chỗ, bấm nút "Bỏ vùng chữ vừa thêm" ở dưới.':'Đang chọn bóng thoại #'+(s.i+1)+': '+short(S.L[s.i]))));
   if(f){$('et').value=f.t;$('er').value=f.r;$('eg').value=f.m;$('es').value=f.st;$('ec').value=f.c||'#000000';$('tg').textContent=f.on?'Tắt dịch vùng SFX này (để nguyên tiếng Nhật)':'Dịch vùng SFX này sang tiếng Việt'}
 }
 
@@ -872,34 +1053,37 @@ function render(){
   S.bs.forEach((b,i)=>draw(x,S.auto[i],b,g*S.k[i]/100,(S.f&&S.f[i])?Object.assign({},o,{font:S.f[i]}):o));
   if(S.ti)drawTitle(x,S.ti.t,S.ti,Object.assign({},o,S.ti.f?{font:S.ti.f}:null,{lh:($('gl').value/100)*((S.ti.lh||100)/100)}),g*S.ti.k/100);
   S.sfx.forEach(f=>{if(f.on)putSfx(x,f,rect(f,c),f.f?Object.assign({},o,{font:f.f}):o)});
+  (S.ft||[]).forEach(f=>putFree(x,f,f.f?Object.assign({},o,{font:f.f}):o));
+  // ô xoá thủ công vẽ sau cùng để xoá được bất cứ thứ gì trong khung, kể cả chữ vừa đặt
+  (S.eb||[]).forEach(q=>eraseR(x,normBox(q,c),null));
   // vùng chữ thêm bằng cách chạm mà chưa gõ chữ Việt: khoanh nét đứt để người dùng kiểm tra, chữ Nhật vẫn còn nguyên
   S.bs.forEach(b=>{if(b.pending){x.save();x.setLineDash([12,8]);x.lineWidth=Math.max(3,c.width/280);x.strokeStyle='#e0e';x.strokeRect(b.x+1,b.y+1,b.w-2,b.h-2);x.restore()}});
   S.cur=c;show(c);
 }
 
-$('gs').oninput=()=>{$('gv').textContent=$('gs').value+'%';lazy()};
+$('gs').oninput=()=>{ghist('gs');$('gv').textContent=$('gs').value+'%';lazy()};
 // đổi giãn dòng chung: tính lại cỡ chữ cho mọi bóng thoại (giãn dòng tính vào lúc căn chữ nên chữ vẫn vừa bóng, giãn nhiều thì cỡ chữ có thể nhỏ lại)
-$('gl').oninput=()=>{$('glv').textContent=$('gl').value+'%';refitAll();lazy()};
-$('hw').oninput=lazy;$('cl').oninput=lazy;
+$('gl').oninput=()=>{ghist('gl');$('glv').textContent=$('gl').value+'%';refitAll();lazy()};
+$('hw').oninput=()=>{ghist('hw');lazy()};$('cl').oninput=()=>{ghist('cl');lazy()};
 const cur=()=>S&&S.sel&&S.sel.t==='x'?S.sfx[S.sel.i]:null;
 // thay chữ của bóng thoại/tiêu đề đang chọn: câu Việt gõ vào sẽ thay vào đúng chỗ chữ Nhật
 // của mục đó; bóng thoại tự căn lại cỡ chữ cho vừa bóng với font và giãn dòng hiện tại của nó
-$('eb').oninput=()=>{const s=S&&S.sel;if(!s||s.t==='x')return;const v=$('eb').value;
+$('eb').oninput=()=>{const s=S&&S.sel;if(!s||s.t==='x')return;ghist('eb');const v=$('eb').value;
   if(s.t==='t'){S.ti.t=v;lazy();return}
   // vùng thêm bằng cách chạm: chỉ khi bắt đầu gõ chữ Việt mới xoá chữ Nhật trong vùng đã khoanh (nướng vệt xoá vào ảnh nền)
   const b=S.bs[s.i];
-  if(b&&b.pending&&v.trim()){const bx=S.base.getContext('2d'),bid=bx.getImageData(0,0,S.base.width,S.base.height);wipe(bid,b);bx.putImageData(bid,0,0);b.pending=0;$('db').hidden=true;log('Đã xoá chữ Nhật ở vùng vừa khoanh và thay bằng chữ của bạn. Chạm tiếp vào vùng chữ khác bị bỏ sót để thêm nữa, hoặc bấm lại nút "+ Chạm để thêm chữ" để tắt chế độ chạm.')}
+  if(b&&b.pending&&v.trim()){const bx=S.base.getContext('2d'),bid=bx.getImageData(0,0,S.base.width,S.base.height);wipe(bid,b);bx.putImageData(bid,0,0);b.pending=0;touchBase();$('db').hidden=true;log('Đã xoá chữ Nhật ở vùng vừa khoanh và thay bằng chữ của bạn. Chạm tiếp vào vùng chữ khác bị bỏ sót để thêm nữa, hoặc bấm lại nút "+ Chạm để thêm chữ" để tắt chế độ chạm.')}
   S.L[s.i]=v;const tc=document.createElement('canvas').getContext('2d');S.auto[s.i]=fit(tc,v,S.bs[s.i],{font:(S.f&&S.f[s.i])||S.font,max:+$('mx').value,lh:effLh(s.i)});lazy()};
-$('ek').oninput=()=>{const s=S&&S.sel;if(!s)return;const v=+$('ek').value,f=cur();if(f)f.k=v;else if(s.t==='t')S.ti.k=v;else S.k[s.i]=v;lazy()};
-$('elh').oninput=()=>{const s=S&&S.sel;if(!s)return;const v=+$('elh').value,f=cur();if(f){f.lh=v;lazy()}else if(s.t==='t'){S.ti.lh=v;lazy()}else{S.lh=S.lh||S.bs.map(()=>100);S.lh[s.i]=v;const tc=document.createElement('canvas').getContext('2d');S.auto[s.i]=fit(tc,S.L[s.i],S.bs[s.i],{font:(S.f&&S.f[s.i])||S.font,max:+$('mx').value,lh:effLh(s.i)});lazy()}};
-$('ef').onchange=()=>{const s=S&&S.sel;if(!s)return;const v=$('ef').value,f=cur();if(f)f.f=v;else if(s.t==='t'){if(S.ti)S.ti.f=v}else{S.f=S.f||[];S.f[s.i]=v;const tc=document.createElement('canvas').getContext('2d');S.auto[s.i]=fit(tc,S.L[s.i],S.bs[s.i],{font:v||S.font,max:+$('mx').value,lh:effLh(s.i)})}lazy()};
-$('et').oninput=()=>{const f=cur();if(f){f.t=$('et').value;if(f.t.trim())f.on=true;lazy()}};
-$('er').oninput=()=>{const f=cur();if(f){f.r=+$('er').value;lazy()}};
-$('eg').oninput=()=>{const f=cur();if(f){f.m=+$('eg').value;lazy()}};
-$('es').onchange=()=>{const f=cur();if(f){f.st=$('es').value;lazy()}};
-$('ec').oninput=()=>{const f=cur();if(f){f.c=$('ec').value;lazy()}};
-$('eo').onclick=()=>{if(cur()){S.sfx.splice(S.sel.i,1);S.sel=null;sync();render()}};
-$('tg').onclick=()=>{const f=cur();if(f){f.on=!f.on;sync();render()}};
+$('ek').oninput=()=>{const s=S&&S.sel;if(!s)return;ghist('ek');const v=+$('ek').value,f=cur();if(f)f.k=v;else if(s.t==='t')S.ti.k=v;else if(s.t==='f')S.ft[s.i].k=v;else S.k[s.i]=v;lazy()};
+$('elh').oninput=()=>{const s=S&&S.sel;if(!s)return;ghist('elh');const v=+$('elh').value,f=cur();if(f){f.lh=v;lazy()}else if(s.t==='t'){S.ti.lh=v;lazy()}else if(s.t==='f'){S.ft[s.i].lh=v;lazy()}else{S.lh=S.lh||S.bs.map(()=>100);S.lh[s.i]=v;const tc=document.createElement('canvas').getContext('2d');S.auto[s.i]=fit(tc,S.L[s.i],S.bs[s.i],{font:(S.f&&S.f[s.i])||S.font,max:+$('mx').value,lh:effLh(s.i)});lazy()}};
+$('ef').onchange=()=>{const s=S&&S.sel;if(!s)return;pushHist();const v=$('ef').value,f=cur();if(f)f.f=v;else if(s.t==='t'){if(S.ti)S.ti.f=v}else if(s.t==='f'){S.ft[s.i].f=v}else{S.f=S.f||[];S.f[s.i]=v;const tc=document.createElement('canvas').getContext('2d');S.auto[s.i]=fit(tc,S.L[s.i],S.bs[s.i],{font:v||S.font,max:+$('mx').value,lh:effLh(s.i)})}lazy()};
+$('et').oninput=()=>{const f=cur();if(f){ghist('et');f.t=$('et').value;if(f.t.trim())f.on=true;lazy()}};
+$('er').oninput=()=>{const f=cur();if(f){ghist('er');f.r=+$('er').value;lazy()}};
+$('eg').oninput=()=>{const f=cur();if(f){ghist('eg');f.m=+$('eg').value;lazy()}};
+$('es').onchange=()=>{const f=cur();if(f){pushHist();f.st=$('es').value;lazy()}};
+$('ec').oninput=()=>{const f=cur();if(f){ghist('ec');f.c=$('ec').value;lazy()}};
+$('eo').onclick=()=>{if(cur()){pushHist();S.sfx.splice(S.sel.i,1);S.sel=null;sync();render()}};
+$('tg').onclick=()=>{const f=cur();if(f){pushHist();f.on=!f.on;sync();render()}};
 
 // chạm vào ảnh để chọn bóng thoại hoặc vùng SFX
 $('res').onclick=e=>{
@@ -916,6 +1100,7 @@ $('res').onclick=e=>{
   let s=null;
   for(let i=S.sfx.length-1;i>=0&&!s;i--){const q=rect(S.sfx[i],S.cur);if(X>=q.x&&X<q.x+q.w&&Y>=q.y&&Y<q.y+q.h)s={t:'x',i}}
   if(!s&&S.ti){const t=S.ti;if(X>=t.x&&X<t.x+t.w&&Y>=t.y&&Y<t.y+t.h)s={t:'t',i:0}}
+  if(!s)for(let i=S.ft.length-1;i>=0;i--){const b=S.ft[i];if(X>=b.x&&X<b.x+b.w&&Y>=b.y&&Y<b.y+b.h){s={t:'f',i};break}}
   for(let i=0;i<S.bs.length&&!s;i++){const b=S.bs[i];if(X>=b.x&&X<b.x+b.w&&Y>=b.y&&Y<b.y+b.h)s={t:'b',i}}
   if(!s&&tapAdd){ // chế độ chạm thêm chữ: chạm vào vùng không có bóng thoại nào thì tự khoanh vùng chữ quanh chỗ chạm
     log('Đang tìm vùng chữ quanh chỗ chạm…');
@@ -924,7 +1109,7 @@ $('res').onclick=e=>{
   }
   S.sel=s;
   // chạm vào vùng SFX là bật dịch vùng đó (trước đó SFX luôn để nguyên tiếng Nhật)
-  if(s&&s.t==='x'&&!S.sfx[s.i].on){S.sfx[s.i].on=true;render();log(S.sfx[s.i].t.trim()?('Đã dịch vùng SFX '+(s.i+1)+' sang tiếng Việt.'):('Đã bật dịch vùng SFX '+(s.i+1)+': gõ chữ SFX tiếng Việt vào ô phía trên ảnh.'))}
+  if(s&&s.t==='x'&&!S.sfx[s.i].on){pushHist();S.sfx[s.i].on=true;render();log(S.sfx[s.i].t.trim()?('Đã dịch vùng SFX '+(s.i+1)+' sang tiếng Việt.'):('Đã bật dịch vùng SFX '+(s.i+1)+': gõ chữ SFX tiếng Việt vào ô phía trên ảnh.'))}
   sync();
 };
 
@@ -1042,6 +1227,7 @@ function addTapAt(X,Y){
   if(!b)return log('Không thấy vùng chữ quanh chỗ chạm đó (chỗ chạm không có nét chữ rõ, hoặc nền không khép kín). Hãy chạm vào giữa vùng chữ, hoặc dùng nút "+ Thêm bóng thoại" để kéo chọn thủ công vùng đó.');
   const dup=S.bs.findIndex(a=>ovl(a,b)>.5*Math.min(a.w*a.h,b.w*b.h));
   if(dup>=0){S.sel={t:'b',i:dup};sync();render();return log('Chỗ đó đã nằm trong bóng thoại #'+(dup+1)+' rồi — sửa chữ của bóng đó trong ô "Chữ lời thoại mục đang chọn".')}
+  pushHist();
   S.bs.push(b);S.L.push('');S.auto.push(fit(document.createElement('canvas').getContext('2d'),'',b,{font:S.font,max:+$('mx').value,lh:+$('gl').value/100}));S.k.push(100);if(S.lh)S.lh.push(100);if(S.f)S.f.push('');
   S.sel={t:'b',i:S.bs.length-1};sync();render();
   $('eb').focus();
@@ -1056,13 +1242,14 @@ $('ta').onclick=()=>{
 };
 $('db').onclick=()=>{
   const s=S&&S.sel;if(!s||s.t!=='b'||!S.bs[s.i]||!S.bs[s.i].pending)return;
+  pushHist();
   S.bs.splice(s.i,1);S.L.splice(s.i,1);S.auto.splice(s.i,1);S.k.splice(s.i,1);if(S.lh)S.lh.splice(s.i,1);if(S.f)S.f.splice(s.i,1);
   S.sel=null;sync();render();log('Đã bỏ vùng chữ vừa thêm, ảnh không thay đổi gì ở vùng đó.');
 };
 
 // khoanh vùng bằng cách kéo trên ảnh (SFX hoặc bóng thoại)
-const SXT='+ Thêm vùng SFX (kéo chọn trên ảnh)',BXT='+ Thêm bóng thoại (kéo chọn trên ảnh)';
-function endPick(){pick=false;dr=null;$('sel').hidden=true;$('res').hidden=false;$('sx').textContent=SXT;$('bx').textContent=BXT}
+const SXT='+ Thêm vùng SFX (kéo chọn trên ảnh)',BXT='+ Thêm bóng thoại (kéo chọn trên ảnh)',ZBT='Ô xoá thủ công (kéo khung, chỉnh 4 cạnh)',TMT='Di chuyển / chỉnh khung văn bản';
+function endPick(){const wb=pick==='e'||pick==='t';pick=false;dr=null;BX=null;$('sel').hidden=true;$('res').hidden=false;$('sx').textContent=SXT;$('bx').textContent=BXT;$('zb').textContent=ZBT;$('tm').textContent=TMT;$('zbd').hidden=true;if(wb&&S)render()}
 function startPick(mode,msg){
   if(!S)return log('Hãy bấm Thực hiện trước, rồi mới thêm vùng.');
   if(pick)return endPick();
@@ -1074,13 +1261,15 @@ function startPick(mode,msg){
 $('sx').onclick=()=>startPick('x','Kéo ngón tay trên ảnh để khoanh sát quanh chữ SFX Nhật cần thay.');
 $('bx').onclick=()=>startPick('b','Kéo ngón tay trên ảnh để khoanh sát quanh bóng thoại còn thiếu.');
 const pt=e=>{const v=$('sel'),r=v.getBoundingClientRect();return[(e.clientX-r.left)*v.width/r.width,(e.clientY-r.top)*v.height/r.height]};
-$('sel').onpointerdown=e=>{e.preventDefault();$('sel').setPointerCapture(e.pointerId);dr={a:pt(e),b:pt(e)}};
+$('sel').onpointerdown=e=>{e.preventDefault();$('sel').setPointerCapture(e.pointerId);if(pick==='e'||pick==='t'){boxDown(e);return}dr={a:pt(e),b:pt(e)}};
 $('sel').onpointermove=e=>{
+  if(pick==='e'||pick==='t'){boxMove(e);return}
   if(!dr)return;dr.b=pt(e);
   const v=$('sel'),x=v.getContext('2d');x.drawImage(S.cur,0,0);
   x.lineWidth=Math.max(3,v.width/200);x.strokeStyle='#e0e';x.strokeRect(dr.a[0],dr.a[1],dr.b[0]-dr.a[0],dr.b[1]-dr.a[1]);
 };
 $('sel').onpointerup=()=>{
+  if(pick==='e'||pick==='t'){boxUp();return}
   if(!dr)return;
   const c=S.cur,x0=Math.max(0,Math.min(dr.a[0],dr.b[0])),y0=Math.max(0,Math.min(dr.a[1],dr.b[1])),x1=Math.min(c.width,Math.max(dr.a[0],dr.b[0])),y1=Math.min(c.height,Math.max(dr.a[1],dr.b[1]));
   const mode=pick;
@@ -1093,15 +1282,17 @@ $('sel').onpointerup=()=>{
     for(let Y=0;Y<bh;Y++)for(let X=0;X<bw;X++)F[Y*bw+X]=(X>=3&&Y>=3&&X<bw-3&&Y<bh-3)?1:0;
     const b={x:Math.round(x0),y:Math.round(y0),w:bw,h:bh,F,H:new Uint8Array(bw*bh),med:Math.max(10,Math.round(bh/7)),fl:sampleFill(S.base,Math.round(x0),Math.round(y0),bw,bh),tb:{x0:Math.round(bw*.08),y0:Math.round(bh*.08),x1:Math.round(bw*.92),y1:Math.round(bh*.92)}};
     const f=fit(c.getContext('2d'),Lall[idx],b,{font:S.font,max:+$('mx').value,lh:+$('gl').value/100});
+    pushHist();
     S.bs.push(b);S.L.push(Lall[idx]);S.auto.push(f);S.k.push(100);if(S.lh)S.lh.push(100);if(S.f)S.f.push('');
     S.sel={t:'b',i:S.bs.length-1};sync();render();
     return log('Đã thêm bóng thoại, dùng dòng: '+Lall[idx]);
   }
+  pushHist();
   S.sfx.push({x:Math.round(x0),y:Math.round(y0),w:Math.round(x1-x0),h:Math.round(y1-y0),t:S.X[S.sfx.length]||'',on:true,k:100,lh:100,r:0,m:4,st:'solid',c:sampleInk(S.base,Math.round(x0),Math.round(y0),Math.round(x1-x0),Math.round(y1-y0))});
   S.sel={t:'x',i:S.sfx.length-1};sync();render();
   log('Đã thêm vùng SFX '+S.sfx.length+(S.sfx[S.sel.i].t?'.':'. Hãy nhập chữ SFX tiếng Việt vào ô phía trên ảnh.'));
 };
-$('sel').onpointercancel=()=>{dr=null;if(S&&pick){const v=$('sel');v.getContext('2d').drawImage(S.cur,0,0)}};
+$('sel').onpointercancel=()=>{if(pick==='e'||pick==='t'){boxCancel();return}dr=null;if(S&&pick){const v=$('sel');v.getContext('2d').drawImage(S.cur,0,0)}};
 
 // Bước duyệt trước khi xoá chữ: nhận diện chỉ là phỏng đoán, trang nào cũng có thể có
 // vùng nhận nhầm (biển hiệu, mặt người, áo...) hoặc vùng bị gán sai dòng. Người dùng
@@ -1186,6 +1377,7 @@ $('ap').onclick=async()=>{
   const ti=RV.tiOn&&RV.ti&&RV.tiT?{...RV.ti,t:RV.tiT,k:100,lh:100,f:RV.tiF||''}:null;
   const starved=RV.bs.filter((b,i)=>RV.on[i]&&!as.has(i)).length,unused=pool.length-bl.length,c=RV.c,sxRaw=RV.sx;
   if(!B.length&&!ti)return log('Chưa vùng nào đang bật có dòng thoại. Hãy bật ít nhất một vùng ở bước duyệt.');
+  pushHist(true); // chụp trạng thái trước khi thay chữ để nút Quay lại khôi phục được cả bước áp dụng này
   log('Đang thay chữ…');await tick();
   const x=c.getContext('2d'),id=x.getImageData(0,0,c.width,c.height);
   B.forEach(b=>wipe(id,b));x.putImageData(id,0,0);
@@ -1193,7 +1385,8 @@ $('ap').onclick=async()=>{
   // giữ mọi vùng SFX nhận diện được làm vùng chờ: chưa dịch, chỉ khi chạm vào mới dịch (dòng SFX gõ sẵn chỉ điền trước, chưa áp dụng)
   const X=parseX($('tx').value);
   let sx=order(sxRaw.slice(),$('rd').value==='rtl');
-  S={base:c,bs:B,L:bl,auto,f:Bf,k:B.map(()=>100),lh:B.map(()=>100),X,sfx:sx.map((s,i)=>({x:s.x,y:s.y,w:s.w,h:s.h,mk:s.mk,gh:s.gh,t:X[i]||'',on:false,k:120,lh:100,r:0,m:4,st:'solid',f:'',c:s.c||'#000000'})),ti,font:fontName,sel:null,cur:null};
+  touchBase();
+  S={base:c,bs:B,L:bl,auto,f:Bf,k:B.map(()=>100),lh:B.map(()=>100),X,sfx:sx.map((s,i)=>({x:s.x,y:s.y,w:s.w,h:s.h,mk:s.mk,gh:s.gh,t:X[i]||'',on:false,k:120,lh:100,r:0,m:4,st:'solid',f:'',c:s.c||'#000000'})),ti,eb:[],ft:[],font:fontName,sel:null,cur:null};
   RV=null;$('rv').hidden=true;endPick();sync();render();
   log('Xong: đã thay '+(ti?'tiêu đề + ':'')+B.length+' bóng thoại.'+(starved?' '+starved+' vùng đang bật nhưng không có dòng thoại nên vẫn giữ nguyên tiếng Nhật — thêm dòng hoặc tắt vùng đó rồi làm lại.':'')+(unused>0?' Còn '+unused+' dòng chưa dùng đến (số dòng nhiều hơn số vùng đang bật).':'')+(bad?' '+bad+' bóng thoại quá nhỏ nên chữ bị thu nhỏ hết cỡ.':'')+(S.sfx.length?' Nhận diện được '+S.sfx.length+' vùng SFX nhưng vẫn để nguyên tiếng Nhật — chạm vào từng vùng SFX trên ảnh để dịch vùng đó.':'')+' Chạm vào tiêu đề hoặc bóng thoại trên ảnh để thay chữ và chỉnh riêng cỡ chữ, font cho từng lời thoại. Chỗ nào máy vẫn bỏ sót chưa có bóng thoại, bấm "+ Chạm để thêm chữ (vùng máy bỏ sót)" rồi chạm thẳng vào vùng chữ đó và gõ chữ Việt của bạn.');
 };
