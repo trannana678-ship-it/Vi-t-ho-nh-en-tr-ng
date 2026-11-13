@@ -65,6 +65,7 @@ ol{margin:6px 0 0;padding-left:22px;color:var(--mu);font-size:13px}
   <div class="r"><label for="hw">Viền trắng quanh chữ (px)</label><input type="range" id="hw" min="0" max="8" value="0"></div>
   <p class="s" id="sl"></p>
   <div id="ed" hidden>
+   <div class="r" id="ebw"><label for="eb">Chữ lời thoại</label><input type="text" id="eb" placeholder="Gõ chữ Việt thay vào chỗ chữ Nhật (| ngắt dòng)"></div>
    <div class="r"><label for="ek">Cỡ chữ mục đang chọn</label><input type="range" id="ek" min="30" max="300" value="100"></div>
    <div class="r"><label for="el">Khoảng cách hàng mục đang chọn</label><input type="range" id="el" min="100" max="200" value="100" step="5"></div>
    <div class="r"><label for="ef">Font chữ mục đang chọn</label><select id="ef"></select></div>
@@ -79,6 +80,7 @@ ol{margin:6px 0 0;padding-left:22px;color:var(--mu);font-size:13px}
   </div>
   <button class="g" id="sx" style="margin-top:8px;width:100%">+ Thêm vùng SFX (kéo chọn trên ảnh)</button>
   <button class="g" id="bx" style="margin-top:8px;width:100%">+ Thêm bóng thoại (kéo chọn trên ảnh)</button>
+  <button class="g" id="bt" style="margin-top:8px;width:100%">+ Chạm để thêm chữ (chạm vào vùng chữ còn thiếu)</button>
  </div>
  <div class="e" id="em">Ảnh sẽ hiện ở đây.</div>
  <img id="res" alt="Ảnh kết quả" hidden>
@@ -89,7 +91,7 @@ ol{margin:6px 0 0;padding-left:22px;color:var(--mu);font-size:13px}
 </main>
 <script>
 const $=id=>document.getElementById(id);
-let src=null,fontName='F-VNF-Comic',nf=0,S=null,url=null,tm=0,pick=false,dr=null;
+let src=null,fontName='F-VNF-Comic',nf=0,S=null,url=null,tm=0,pick=false,dr=null,tapAdd=false;
 // danh sách font: chỉ 5 font truyện tranh đóng gói sẵn (user chọn), font hệ thống đã bỏ.
 // Font chung (fontName) là mặc định cho mọi lời thoại; mỗi bóng/tiêu đề/SFX có thể chọn font riêng
 // ('' nghĩa là dùng font chung). Khi nạp font mới, font đó thành font chung và có thêm trong danh sách.
@@ -455,6 +457,130 @@ function bubblesCol(id,minA){
   const{lab}=labelMask(mk,w,h,false),res=[];
   scanLab(id,lab,N,minA,true,res,[]);
   return res;
+}
+
+// vùng có phải chữ thật không: cần đủ nét chữ compact (gần vuông) như chữ, không phải đường viền/tranh
+function looksLikeText(bl){
+  let big=0,sq=0;
+  for(const b of bl){const m=Math.max(b.w,b.h);if(m<4)continue;big++;const q=b.w/b.h;if(q>=.4&&q<=2.5)sq++}
+  return sq>=3&&sq>=.6*big;
+}
+
+// chạm vào vùng chữ còn thiếu: tìm bóng thoại chứa điểm chạm bằng flood-fill vùng sáng kề điểm chạm.
+// Trả về bóng thoại dùng được như bóng tự tìm ({x,y,w,h,F,H,med,fl,tb}), hoặc null nếu không thấy chữ.
+function growRegion(X,Y){
+  const cv=S.base,w=cv.width,h=cv.height,ctx=cv.getContext('2d'),id=ctx.getImageData(0,0,w,h),d=id.data,N=w*h,T=+$('wt').value;
+  const lum=i=>.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2];
+  const px=(x,y)=>y*w+x;
+  let sx=Math.round(X),sy=Math.round(Y);
+  if(sx<0)sx=0;if(sy<0)sy=0;if(sx>=w)sx=w-1;if(sy>=h)sy=h-1;
+  // hạt giống: điểm chạm nếu sáng, không thì điểm sáng gần nhất trong vòng 40px
+  if(lum(px(sx,sy))<=T){
+    let found=false;
+    for(let r=1;r<=40&&!found;r++)for(let dy=-r;dy<=r&&!found;dy++)for(let dx=-r;dx<=r;dx++){
+      if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
+      const x=sx+dx,y=sy+dy;
+      if(x<0||y<0||x>=w||y>=h)continue;
+      if(lum(px(x,y))>T){sx=x;sy=y;found=true;break}
+    }
+    if(!found)return null;
+  }
+  // flood-fill vùng sáng kề hạt giống (4 chiều); quá lớn thì đó là nền giấy, để nhánh dưới xử lý
+  const reg=new Uint8Array(N),st=[px(sx,sy)];reg[px(sx,sy)]=1;
+  let x0=sx,x1=sx,y0=sy,y1=sy,area=0;
+  while(st.length){
+    const i=st.pop(),x=i%w,y=(i/w)|0;area++;
+    if(area>N*.3)break;
+    if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;
+    for(const k of [i-1,i+1,i-w,i+w]){
+      if(k<0||k>=N)continue;
+      if(Math.abs(k%w-x)>1)continue;
+      if(!reg[k]&&lum(k)>T){reg[k]=1;st.push(k)}
+    }
+  }
+  if(area>N*.3)return growGlyphBox(X,Y,id);
+  // bóng thoại: bbox vùng sáng (+1 viền), F = phần trong không lọt ra ngoài, H = nét chữ trong đó
+  const bw=x1-x0+3,bh=y1-y0+3,ox=x0-1,oy=y0-1;
+  const inR=(X2,Y2)=>{const gx=X2+ox,gy=Y2+oy;return gx>=0&&gy>=0&&gx<w&&gy<h?reg[gy*w+gx]:0};
+  const o=new Uint8Array(bw*bh),q=[0];o[0]=1;
+  while(q.length){
+    const k=q.pop(),x=k%bw,y=(k/bw)|0;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+      const X2=x+dx,Y2=y+dy;if(X2<0||Y2<0||X2>=bw||Y2>=bh)continue;
+      const kk=Y2*bw+X2;if(o[kk]||inR(X2,Y2))continue;
+      o[kk]=1;q.push(kk);
+    }
+  }
+  const F=new Uint8Array(bw*bh),H=new Uint8Array(bw*bh);let fa=0,ha=0,tx0=bw,ty0=bh,tx1=0,ty1=0;
+  for(let Y2=0;Y2<bh;Y2++)for(let X2=0;X2<bw;X2++){
+    const k=Y2*bw+X2;if(o[k])continue;
+    F[k]=1;fa++;
+    if(!inR(X2,Y2)){H[k]=1;ha++;if(X2<tx0)tx0=X2;if(X2>tx1)tx1=X2;if(Y2<ty0)ty0=Y2;if(Y2>ty1)ty1=Y2}
+  }
+  if(!ha||tx1-tx0<8||ty1-ty0<8)return null;
+  const lb=new Int32Array(bw*bh),bl=[];
+  for(let k0=0;k0<bw*bh;k0++){
+    if(!H[k0]||lb[k0])continue;
+    const bid=bl.length+1;let a0=bw,b0=bh,a1=0,b1=0;const s2=[k0];lb[k0]=bid;
+    while(s2.length){
+      const k=s2.pop(),x=k%bw,y=(k/bw)|0;
+      if(x<a0)a0=x;if(x>a1)a1=x;if(y<b0)b0=y;if(y>b1)b1=y;
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const X2=x+dx,Y2=y+dy;if(X2<0||Y2<0||X2>=bw||Y2>=bh)continue;const kk=Y2*bw+X2;if(H[kk]&&!lb[kk]){lb[kk]=bid;s2.push(kk)}}
+    }
+    bl.push({x0:a0,y0:b0,x1:a1,y1:b1,w:a1-a0+1,h:b1-b0+1});
+  }
+  if(!looksLikeText(bl))return null; // nét tối là đường viền/tranh, không phải chữ
+  const m6=[];for(const b of bl){const m=Math.max(b.w,b.h);if(m>=6)m6.push(m)}
+  m6.sort((p,q)=>p-q);
+  const med=m6.length?m6[m6.length>>1]:Math.max(10,Math.round(bh/7));
+  const fr=[],fg=[],fb=[];
+  for(let k=0;k<bw*bh;k+=3){
+    if(!F[k]||H[k])continue;
+    const gx=k%bw+ox,gy=((k/bw)|0)+oy;if(gx<0||gy<0||gx>=w||gy>=h)continue;
+    const i=(gy*w+gx)*4;fr.push(d[i]);fg.push(d[i+1]);fb.push(d[i+2]);
+  }
+  const med3=a=>{if(!a.length)return 255;a.sort((p,q)=>p-q);return a[a.length>>1]};
+  return{x:ox,y:oy,w:bw,h:bh,F,H,med,fl:[med3(fr),med3(fg),med3(fb)],tb:{x0:tx0,y0:ty0,x1:tx1,y1:ty1}};
+}
+
+// chữ nằm trực tiếp trên nền (không có bóng thoại): gom các nét chữ gần điểm chạm thành một vùng chữ nhật
+function growGlyphBox(X,Y,id){
+  const w=id.width,h=id.height,d=id.data;
+  const R=160,x0=Math.max(0,Math.round(X)-R),y0=Math.max(0,Math.round(Y)-R),x1=Math.min(w-1,Math.round(X)+R),y1=Math.min(h-1,Math.round(Y)+R);
+  const rw=x1-x0+1,rh=y1-y0+1,mk=new Uint8Array(rw*rh);
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+    const i=(y*w+x)*4;
+    if(.299*d[i]+.587*d[i+1]+.114*d[i+2]<140)mk[(y-y0)*rw+x-x0]=1;
+  }
+  const{lab}=labelMask(mk,rw,rh,true),box=new Map();
+  for(let y=0;y<rh;y++)for(let x=0;x<rw;x++){
+    const L=lab[y*rw+x];if(!L)continue;
+    let b=box.get(L);if(!b){b={x0:rw,y0:rh,x1:0,y1:0,a:0};box.set(L,b)}
+    if(x<b.x0)b.x0=x;if(x>b.x1)b.x1=x;if(y<b.y0)b.y0=y;if(y>b.y1)b.y1=y;b.a++;
+  }
+  const cx=Math.round(X)-x0,cy=Math.round(Y)-y0,near=[];
+  for(const b of box.values()){
+    if(b.a<4)continue;
+    const bx=(b.x0+b.x1)/2,by=(b.y0+b.y1)/2;
+    if(Math.hypot(bx-cx,by-cy)<=120)near.push(b);
+  }
+  if(!near.length)return null;
+  if(!looksLikeText(near))return null; // nét tối là đường viền/tranh, không phải chữ
+  let gx0=1e9,gy0=1e9,gx1=-1,gy1=-1;
+  for(const b of near){if(b.x0<gx0)gx0=b.x0;if(b.y0<gy0)gy0=b.y0;if(b.x1>gx1)gx1=b.x1;if(b.y1>gy1)gy1=b.y1}
+  const pad=12;
+  gx0=Math.max(0,gx0-pad);gy0=Math.max(0,gy0-pad);gx1=Math.min(rw-1,gx1+pad);gy1=Math.min(rh-1,gy1+pad);
+  const bw=gx1-gx0+1,bh=gy1-gy0+1;
+  if(bw>500||bh>400||bw<16||bh<16)return null;
+  const F=new Uint8Array(bw*bh).fill(1),H=new Uint8Array(bw*bh);
+  for(let y=0;y<bh;y++)for(let x=0;x<bw;x++)if(mk[(gy0+y)*rw+gx0+x])H[y*bw+x]=1;
+  let tx0=bw,ty0=bh,tx1=0,ty1=0;
+  for(let k=0;k<bw*bh;k++)if(H[k]){const x=k%bw,y=(k/bw)|0;if(x<tx0)tx0=x;if(x>tx1)tx1=x;if(y<ty0)ty0=y;if(y>ty1)ty1=y}
+  if(tx1-tx0<8||ty1-ty0<8)return null;
+  const m6=[];for(const b of near){const m=Math.max(b.w,b.h);if(m>=6)m6.push(m)}
+  m6.sort((p,q)=>p-q);
+  const med=m6.length?m6[m6.length>>1]:Math.max(10,Math.round(bh/7));
+  return{x:x0+gx0,y:y0+gy0,w:bw,h:bh,F,H,med,fl:sampleFill(S.base,x0+gx0,y0+gy0,bw,bh),tb:{x0:tx0,y0:ty0,x1:tx1,y1:ty1}};
 }
 
 // SFX tự tìm: nhóm 3 đến 12 nét đen cỡ đều nhau nằm lọt trong vùng nền trắng lớn (không phải bóng thoại)
@@ -866,6 +992,8 @@ function sync(){
   if(!s){$('sl').textContent='Chạm vào tiêu đề, một bóng thoại hoặc vùng SFX trên ảnh để chỉnh riêng. SFX giữ nguyên tiếng Nhật, chạm vào chữ SFX để đổi sang tiếng Việt.';return}
   const f=s.t==='x'?S.sfx[s.i]:null;
   $('ex').hidden=!f;
+  $('ebw').hidden=!!f;
+  if(!f)$('eb').value=s.t==='t'?S.ti.t:S.L[s.i];
   $('ek').value=f?f.k:(s.t==='t'?S.ti.k:S.k[s.i]);
   $('el').value=f?(f.lm||100):(s.t==='t'?(S.ti.lm||100):(S.lm[s.i]||100));
   $('ef').value=f?(f.fn||''):(s.t==='t'?(S.ti.fn||''):(S.fn[s.i]||''));
@@ -883,6 +1011,8 @@ function render(){
   S.bs.forEach((b,i)=>draw(x,S.auto[i],b,g*S.k[i]/100,{...o,font:fnB(i)}));
   if(S.ti)drawTitle(x,S.ti.t,S.ti,{...o,font:fnT(),lhm:lmT()},g*S.ti.k/100);
   S.sfx.forEach(f=>putSfx(x,f,rect(f,c),{...o,font:fnX(f),lhm:lmX(f)}));
+  // bóng mới chạm thêm, chưa gõ chữ: vẽ viền hồng đứt nét để thấy rõ vùng vừa tìm được
+  S.bs.forEach(b=>{if(b.pend){x.save();x.setLineDash([8,6]);x.lineWidth=Math.max(2,c.width/400);x.strokeStyle='#e0e';x.strokeRect(b.x,b.y,b.w,b.h);x.restore()}});
   S.cur=c;show(c);
 }
 
@@ -910,6 +1040,8 @@ $('ef2').onchange=async e=>{
   e.target.value='';
 };
 $('et').oninput=()=>{const f=cur();if(f){f.t=$('et').value;lazy()}};
+// sửa chữ lời thoại của bóng/tiêu đề đang chọn: gõ chữ Việt mới là thay luôn vào chỗ chữ Nhật, fit lại vừa bóng
+$('eb').oninput=()=>{const s=S&&S.sel;if(!s||s.t==='x')return;const v=$('eb').value;if(s.t==='t')S.ti.t=v;else{const b=S.bs[s.i];if(b.pend&&v.trim()){wipeBase(b);b.pend=false}S.L[s.i]=v;refitBubble(s.i)}lazy()};
 $('er').oninput=()=>{const f=cur();if(f){f.r=+$('er').value;lazy()}};
 $('eg').oninput=()=>{const f=cur();if(f){f.m=+$('eg').value;lazy()}};
 $('es').onchange=()=>{const f=cur();if(f){f.st=$('es').value;lazy()}};
@@ -924,6 +1056,10 @@ $('res').onclick=e=>{
   for(let i=S.sfx.length-1;i>=0&&!s;i--){const q=rect(S.sfx[i],S.cur);if(X>=q.x&&X<q.x+q.w&&Y>=q.y&&Y<q.y+q.h)s={t:'x',i}}
   if(!s&&S.ti){const t=S.ti;if(X>=t.x&&X<t.x+t.w&&Y>=t.y&&Y<t.y+t.h)s={t:'t',i:0}}
   for(let i=0;i<S.bs.length&&!s;i++){const b=S.bs[i];if(X>=b.x&&X<b.x+b.w&&Y>=b.y&&Y<b.y+b.h)s={t:'b',i}}
+  if(tapAdd){
+    if(s){S.sel=s;tapAdd=false;$('bt').textContent=BTT;dropPending();sync();return}
+    return tapAddAt(X,Y);
+  }
   S.sel=s;
   if(s&&s.t==='x'){const f=S.sfx[s.i];if(!f.t.trim()&&S.X[s.i]){f.t=S.X[s.i];render()}}
   sync();
@@ -963,6 +1099,49 @@ function startPick(mode,msg){
 }
 $('sx').onclick=()=>startPick('x','Kéo ngón tay trên ảnh để khoanh sát quanh chữ SFX Nhật cần thay.');
 $('bx').onclick=()=>startPick('b','Kéo ngón tay trên ảnh để khoanh sát quanh bóng thoại còn thiếu.');
+
+// xoá chữ Nhật trong vùng của một bóng trên ảnh gốc (S.base) để chữ Việt vẽ lên không bị chồng
+function wipeBase(b){
+  const ctx=S.base.getContext('2d'),id=ctx.getImageData(0,0,S.base.width,S.base.height);
+  wipe(id,b);ctx.putImageData(id,0,0);
+}
+// thêm một bóng thoại vào kết quả: fit chữ rồi chọn nó để chỉnh tiếp.
+// pend=true: bóng mới chạm thêm, chưa gõ chữ nên chưa xoá chữ Nhật — chỉ xoá khi bắt đầu gõ (xem ô #eb).
+function addBubble(b,text,pend){
+  const f=fit(S.base.getContext('2d'),text,b,{font:fontName,max:+$('mx').value,lhm:+$('lh').value/100});
+  S.bs.push(b);S.L.push(text);S.auto.push(f);S.k.push(100);S.fn.push('');S.lm.push(100);
+  if(pend)b.pend=true;
+  S.sel={t:'b',i:S.bs.length-1};sync();render();
+  return S.bs.length-1;
+}
+// bỏ bóng thoại đang chờ (chạm thêm mà chưa gõ chữ): chữ Nhật chưa bị xoá nên bỏ là an toàn
+function dropPending(){
+  for(let i=S.bs.length-1;i>=0;i--){
+    if(S.bs[i].pend&&!S.L[i]){
+      S.bs.splice(i,1);S.L.splice(i,1);S.auto.splice(i,1);S.k.splice(i,1);S.fn.splice(i,1);S.lm.splice(i,1);
+      if(S.sel&&S.sel.t==='b'&&S.sel.i===i)S.sel=null;
+      else if(S.sel&&S.sel.t==='b'&&S.sel.i>i)S.sel.i--;
+    }
+  }
+}
+// chạm vào vùng chữ còn thiếu: tìm vùng chữ rồi thêm bóng thoại chờ gõ chữ Việt
+function tapAddAt(X,Y){
+  if(!S)return;
+  dropPending();
+  const b=growRegion(X,Y);
+  if(!b)return log('Không thấy chữ ở đây, hãy chạm sát vào chữ Nhật hơn.');
+  addBubble(b,'',true);
+  log('Đã tìm thấy vùng chữ (viền hồng đứt nét). Gõ chữ Việt vào ô "Chữ lời thoại" để thay vào đó.');
+  $('eb').focus();
+}
+const BTT='+ Chạm để thêm chữ (chạm vào vùng chữ còn thiếu)';
+$('bt').onclick=()=>{
+  if(!S)return log('Hãy bấm Thực hiện trước, rồi mới thêm chữ.');
+  tapAdd=!tapAdd;
+  $('bt').textContent=tapAdd?'Huỷ chạm thêm chữ':BTT;
+  if(!tapAdd)dropPending();
+  log(tapAdd?'Chạm vào vùng chữ Nhật còn thiếu trên ảnh để thêm chữ vào đó.':'Đã tắt chế độ chạm thêm chữ.');
+};
 const pt=e=>{const v=$('sel'),r=v.getBoundingClientRect();return[(e.clientX-r.left)*v.width/r.width,(e.clientY-r.top)*v.height/r.height]};
 $('sel').onpointerdown=e=>{e.preventDefault();$('sel').setPointerCapture(e.pointerId);dr={a:pt(e),b:pt(e)}};
 $('sel').onpointermove=e=>{
